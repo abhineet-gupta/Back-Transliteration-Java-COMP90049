@@ -47,6 +47,7 @@ public class GED {
         System.out.println("Number of dict names read: " + dictList.size());
         //-----------------------
             //for benchmarking time performance
+        System.out.println("Processing...");
         long startTime = System.currentTimeMillis();
         
         Integer num_names = nameList.size();
@@ -73,23 +74,25 @@ public class GED {
                     scoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
                 }
             }
-                //Print out current Persian name and its best suited Latin names
-            System.out.print(nameList.get(i)[p_idx]);
-            for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
-                System.out.print("\t" + bestName);
-            }
-            System.out.println();
+//                //Print out current Persian name and its best suited Latin names
+//            System.out.print(nameList.get(i)[p_idx]);
+//            for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
+//                System.out.print("\t" + bestName);
+//            }
+//            System.out.println();
         }
         
         int correct_predicted = 0;
         int total_predicted = 0;
+        
         for (int i = 0; i < num_names; i++) {            
             if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
                 correct_predicted++;
             }
             total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
         }
-        System.out.println("\nRecall: " + correct_predicted*100/total_predicted + "%");
+        System.out.println("\nPrecision: " + correct_predicted*100/total_predicted + "%");
+        System.out.println("\nRecall: " + correct_predicted*100/nameList.size() + "%");
         
         
         //end benchmark timing
