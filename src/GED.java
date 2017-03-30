@@ -1,8 +1,10 @@
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,14 +23,12 @@ public class GED {
 
         //import training data
         try {
-            //Open file as a stream (Java 8 feature)
+                //Open file as a stream (Java 8 feature)
             Stream<String> trainStream = Files.lines(Paths.get(train_filepath));
-                
-            //parse each line in the stream to store as Persian and Latin name
+                //parse each line in the stream to store as Persian and Latin name
             nameList = trainStream.map(line -> line.split(DELIMITER))
                             .collect(Collectors.toList());
             trainStream.close();
-            
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -36,34 +36,54 @@ public class GED {
         
         //import dictionary names
         try {
-            //Open file as a stream (Java 8 feature)
+                //Open file as a stream (Java 8 feature)
             Stream<String> dictStream = Files.lines(Paths.get(dict_filepath));
-                
-            //parse each line
+                //parse each line
             dictList = dictStream.collect(Collectors.toList());
             dictStream.close();
-            
         } catch (Exception e) {
             System.out.println(e);
         }
         System.out.println("Number of dict names read: " + dictList.size());
         //-----------------------
-//        System.out.println(CalculateGED("crat", "arts"));
 
-        System.out.println(CalculateGED(nameList.get(0)[p_idx].toLowerCase(), dictList.get(1)));
-
-//        for (String[] names : nameList) {
-//            System.out.println(CalculateGED(names[p_idx], dict));
-//        }
+        Integer[][] gedScoreArr = new Integer[nameList.size()][dictList.size()];
+//        Map<Integer, ArrayList<String>> scoreNamesMap = new HashMap<Integer, ArrayList<String>>();
+        Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>();
+        int temp_score, temp_min = 99;
+        
+        for (int i = 0; i < 10; i++) {   //for each persian name
+            temp_min = 99;
+            
+            for (int j = 0; j < dictList.size(); j++) { 
+                //find its GED for each dictionary name
+                temp_score = CalculateGED(nameList.get(i)[p_idx].toLowerCase(), dictList.get(j));
+                
+                //if the new GED is less than previous minimum GED for this persian name, then update
+                if (temp_min > temp_score) {
+                    temp_min = temp_score;
+//                    scoreNamesMap.put(temp_min, new ArrayList<> (Arrays.asList(dictList.get(j))));
+                    scoreNamesMap.put(nameList.get(i)[p_idx], new ArrayList<> (Arrays.asList(dictList.get(j))));
+                } else if (temp_score == temp_min){
+//                    scoreNamesMap.get(temp_min).add(dictList.get(j));
+                    scoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
+                }
+            }
+            System.out.print(nameList.get(i)[p_idx]);
+            for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
+                System.out.print("\t" + bestName);
+            }
+            System.out.println();
+        }
     }
 
     private static int CalculateGED(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
-        int m_cost = 1;
-        int i_cost = -1;
-        int d_cost = -1;
-        int r_cost = -1;
+        int m_cost = 0;
+        int i_cost = 1;
+        int d_cost = 1;
+        int r_cost = 1;
         
         for (int i = 0; i <= lhs.length(); i++)                                 
             distance[i][0] = i * i_cost;                                                  
@@ -73,7 +93,7 @@ public class GED {
                                                                                  
         for (int i = 1; i <= lhs.length(); i++)                                 
             for (int j = 1; j <= rhs.length(); j++)                             
-                distance[i][j] = maximum(                                        
+                distance[i][j] = minimum(                                        
                         distance[i - 1][j] + i_cost,                                  
                         distance[i][j - 1] + d_cost,                                  
                         distance[i - 1][j - 1] + ((lhs.charAt(i - 1) == rhs.charAt(j - 1)) ? m_cost : r_cost));
@@ -81,7 +101,7 @@ public class GED {
         return distance[lhs.length()][rhs.length()];
     }
     
-    private static int maximum(int a, int b, int c) {                            
-        return Math.max(Math.max(a, b), c);                                      
+    private static int minimum(int a, int b, int c) {                            
+        return Math.min(Math.min(a, b), c);                                      
     }
 }
