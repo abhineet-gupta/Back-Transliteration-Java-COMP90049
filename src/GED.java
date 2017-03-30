@@ -16,10 +16,10 @@ public class GED {
         String DELIMITER = "\t";
         
         int p_idx = 0;  //Persian name index
-        @SuppressWarnings("unused")
         int l_idx = 1;  //Latin name index
+        
         List<String[]> nameList = new ArrayList<>();
-        List<String> dictList = new ArrayList<String>();
+        List<String> dictList = new ArrayList<>();
 
         //import training data
         try {
@@ -27,10 +27,10 @@ public class GED {
             Stream<String> trainStream = Files.lines(Paths.get(train_filepath));
                 //parse each line in the stream to store as Persian and Latin name
             nameList = trainStream.map(line -> line.split(DELIMITER))
-                            .collect(Collectors.toList());
+                    .collect(Collectors.toList());
             trainStream.close();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();;
         }
         System.out.println("Number of training data read: " + nameList.size());
         
@@ -42,44 +42,65 @@ public class GED {
             dictList = dictStream.collect(Collectors.toList());
             dictStream.close();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         System.out.println("Number of dict names read: " + dictList.size());
         //-----------------------
-
-        Integer[][] gedScoreArr = new Integer[nameList.size()][dictList.size()];
-//        Map<Integer, ArrayList<String>> scoreNamesMap = new HashMap<Integer, ArrayList<String>>();
+            //for benchmarking time performance
+        long startTime = System.currentTimeMillis();
+        
+        Integer num_names = nameList.size();
         Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>();
         int temp_score, temp_min = 99;
+        String temp_name;
         
-        for (int i = 0; i < 10; i++) {   //for each persian name
+        for (int i = 0; i < num_names; i++) {   //for each persian name
             temp_min = 99;
+            temp_name = nameList.get(i)[p_idx].toLowerCase();
             
             for (int j = 0; j < dictList.size(); j++) { 
                 //find its GED for each dictionary name
-                temp_score = CalculateGED(nameList.get(i)[p_idx].toLowerCase(), dictList.get(j));
+                temp_score = CalculateGED(temp_name, dictList.get(j));
                 
-                //if the new GED is less than previous minimum GED for this persian name, then update
+                //if the new GED is less than previous minimum GED for this persian name...
                 if (temp_min > temp_score) {
                     temp_min = temp_score;
-//                    scoreNamesMap.put(temp_min, new ArrayList<> (Arrays.asList(dictList.get(j))));
-                    scoreNamesMap.put(nameList.get(i)[p_idx], new ArrayList<> (Arrays.asList(dictList.get(j))));
+                        //...create new list of potential Latin names for that persian name
+                    scoreNamesMap.put(nameList.get(i)[p_idx], new ArrayList<>(Arrays.asList(dictList.get(j))));
+                    
                 } else if (temp_score == temp_min){
-//                    scoreNamesMap.get(temp_min).add(dictList.get(j));
+                        //Otherwise, if the score is the same, add current Latin name as a potential name
                     scoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
                 }
             }
+                //Print out current Persian name and its best suited Latin names
             System.out.print(nameList.get(i)[p_idx]);
             for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
                 System.out.print("\t" + bestName);
             }
             System.out.println();
         }
+        
+        int correct_predicted = 0;
+        int total_predicted = 0;
+        for (int i = 0; i < num_names; i++) {            
+            if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
+                correct_predicted++;
+            }
+            total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
+        }
+        System.out.println("\nRecall: " + correct_predicted*100/total_predicted + "%");
+        
+        
+        //end benchmark timing
+        long endTime = System.currentTimeMillis();
+        System.out.println("\nCalculations took " + (endTime - startTime) + " ms.");
     }
 
     private static int CalculateGED(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
+    //Score matrix for Levenshtein Distance
         int m_cost = 0;
         int i_cost = 1;
         int d_cost = 1;
