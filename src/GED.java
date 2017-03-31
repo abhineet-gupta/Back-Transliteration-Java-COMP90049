@@ -92,12 +92,13 @@ public class GED {
             total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
         }
         System.out.println("\nPrecision: " + correct_predicted*100/total_predicted + "%");
-        System.out.println("\nRecall: " + correct_predicted*100/nameList.size() + "%");
+        System.out.println("Recall: " + correct_predicted*100/nameList.size() + "%");
+        System.out.println("Average number of predictions per name: " + total_predicted/nameList.size());
         
         
         //end benchmark timing
         long endTime = System.currentTimeMillis();
-        System.out.println("\nCalculations took " + (endTime - startTime) + " ms.");
+        System.out.println("\nCalculations took " + (endTime - startTime)/1000.0/60.0 + " min.");
     }
 
     private static int CalculateGED(String lhs, String rhs) {
