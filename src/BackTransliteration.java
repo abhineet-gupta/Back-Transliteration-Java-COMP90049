@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 public class BackTransliteration {   
         //Process entire file or limited records
-    private static final Boolean process_entire_file = false; //set to false to process limited records
+    private static final Boolean process_entire_file = true; //set to false to process limited records
     private static final Integer proc_limit = 100;  //number of names to process; only valid if above is false
     
     private static final Integer max_row = 26, max_col = 26;    //number of letters in alphabet
@@ -24,7 +24,11 @@ public class BackTransliteration {
     
     //Default match and replacement scores
     private static final Integer def_match_score = 0;
+    private static final Integer ged_i_cost = 0;
+    private static final Integer ged_d_cost = 2;
     private static final Integer def_replace_score = 1;
+    private static final Integer useful_replace_score = 0;
+    
     
     private static final Integer p_idx = 0;  //Persian name index
     private static final Integer l_idx = 1;  //Latin name index
@@ -66,6 +70,7 @@ public class BackTransliteration {
             temp_name = nameList.get(i)[p_idx].toLowerCase();
             
             for (int j = 0; j < dictList.size(); j++) {    //find its GED for each dictionary name
+                
 //                temp_score = calculateLevenshteinDistance(temp_name, dictList.get(j));
                 temp_score = calculateGED(temp_name, dictList.get(j));
                 
@@ -161,6 +166,30 @@ public class BackTransliteration {
                 }
             }
         }
+        
+        //custom replacement scores
+        changeScore('a', 'e');
+        changeScore('a', 'i');
+        changeScore('a', 'o');
+        changeScore('a', 'u');
+        changeScore('c', 'k');
+        changeScore('g', 'j');
+        changeScore('p', 'f');
+        changeScore('s', 'c');
+        changeScore('v', 'w');
+        changeScore('v', 'u');
+        changeScore('v', 'o');
+        changeScore('v', 'w');
+        changeScore('o', 'v');
+        changeScore('y', 'i');
+        changeScore('y', 'e');
+        changeScore('z', 's');
+    }
+    
+
+    private static void changeScore(char c, char d) {
+        matrix[Character.getNumericValue(c)-10][Character.getNumericValue(d)-10] = useful_replace_score;
+        matrix[Character.getNumericValue(d)-10][Character.getNumericValue(c)-10] = useful_replace_score;
     }
 
     /**
@@ -199,22 +228,19 @@ public class BackTransliteration {
     private static Integer calculateGED(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
-        int i_cost = 1;
-        int d_cost = 1;
-        
         //Initialise first row and column of table 
         for (int i = 0; i <= lhs.length(); i++)                                 
-            distance[i][0] = i * i_cost;                                                  
+            distance[i][0] = i * ged_i_cost;                                                  
         
         for (int j = 1; j <= rhs.length(); j++)                                 
-            distance[0][j] = j * d_cost;                                                  
+            distance[0][j] = j * ged_d_cost;                                                  
                                                   
         //Calculate each cell based on neighbouring cells
         for (int i = 1; i <= lhs.length(); i++)                                 
             for (int j = 1; j <= rhs.length(); j++)                             
                 distance[i][j] = minimum(                                        
-                        distance[i - 1][j] + i_cost,                                  
-                        distance[i][j - 1] + d_cost,                                  
+                        distance[i - 1][j] + ged_i_cost,                                  
+                        distance[i][j - 1] + ged_d_cost,                                  
                         distance[i - 1][j - 1] + matchReplaceCost(lhs.charAt(i - 1), rhs.charAt(j - 1)));
                                                                                  
         return distance[lhs.length()][rhs.length()];
