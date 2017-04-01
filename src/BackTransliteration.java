@@ -12,57 +12,42 @@ import java.util.stream.Stream;
 public class BackTransliteration {   
         //Process entire file or limited records
     private static final Boolean process_entire_file = false; //set to false to process limited records
-    private static final Integer proc_limit = 20;  //number of names to process; only valid if above is false
+    private static final Integer proc_limit = 10;  //number of names to process; only valid if above is false
     
-    private static final int max_row = 26, max_col = 26;    //number of letters in alphabet
-    private static int[][] matrix = new int[max_row][max_col];  //BLOSUM-style matrix to hold scoring matrix
+    private static final Integer max_row = 26, max_col = 26;    //number of letters in alphabet
+    private static Integer[][] matrix = new Integer[max_row][max_col];  //BLOSUM-style matrix to hold scoring matrix
     
         //Path to files
     private static final String train_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\train.txt";
     private static final String dict_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\names.txt";
     private static final String DELIMITER = "\t";
     
+    //Default match and replacement scores
+    private static final Integer def_match_score = 0;
+    private static final Integer def_replace_score = 1;
+    
+    private static final Integer p_idx = 0;  //Persian name index
+    private static final Integer l_idx = 1;  //Latin name index
+    
     public static void main(String[] args) {
         
-        int p_idx = 0;  //Persian name index
-        int l_idx = 1;  //Latin name index
-        
-        int temp_int_score_value = 99;
+        Integer temp_score_value = 99;
         
         List<String[]> nameList = new ArrayList<>();    //to store data from train.txt
         List<String> dictList = new ArrayList<>();      //to store data from names.txt
         
 //----------------------Import Data---------------------------------------------
-        try {
-                //Open file as a stream
-            Stream<String> trainStream = Files.lines(Paths.get(train_filepath));
-                //parse each line in the stream to store as Persian and Latin name
-            nameList = trainStream.map(line -> line.split(DELIMITER))
-                    .collect(Collectors.toList());
-            trainStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();;
-        }
+        nameList = importTrainData();
+        dictList = importDictData();
         System.out.println("Number of training data read: " + nameList.size());
-        
-        //import dictionary names
-        try {
-                //Open file as a stream
-            Stream<String> dictStream = Files.lines(Paths.get(dict_filepath));
-                //parse each line
-            dictList = dictStream.collect(Collectors.toList());
-            dictStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         System.out.println("Number of dict names read: " + dictList.size());
         
 //-------------------Process data-----------------------------------------------
             //for benchmarking time performance
         System.out.println("Processing...");
-        long startTime = System.currentTimeMillis();
+        Long startTime = System.currentTimeMillis();
         
-        int num_names; 
+        Integer num_names; 
         if (process_entire_file) {
             num_names = nameList.size();    //how many records to analyse 
         } else {
@@ -70,11 +55,14 @@ public class BackTransliteration {
         }
         Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>(); //to store the results/scores
 
-        int temp_score, temp_min;
+        Integer temp_score, temp_min;
         String temp_name = "";
+
+        //Initialise scoring matrix - used only for GED
+        initialiseScoringMatrix();        
         
         for (int i = 0; i < num_names; i++) {   //for each Persian name
-            temp_min = temp_int_score_value;
+            temp_min = temp_score_value;
             temp_name = nameList.get(i)[p_idx].toLowerCase();
             
             for (int j = 0; j < dictList.size(); j++) {    //find its GED for each dictionary name
@@ -92,28 +80,27 @@ public class BackTransliteration {
                     scoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
                 }
             }
-//                //Print out current Persian name and its best suited Latin names
-//            System.out.print(nameList.get(i)[p_idx]);
-//            for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
-//                System.out.print("\t" + bestName);
-//            }
-//            System.out.println();
+            
+//            printPredictedNames(nameList, scoreNamesMap);
         }
         
 //------------------Analyse----------------------------------------------------
-        int correct_predicted = 0;
-        int total_predicted = 0;
+        Integer precision = 0, recall = 0, guessesPerName = 0, correct_predicted = 0, total_predicted = 0;
         
-        for (int i = 0; i < num_names; i++) {            
+        for (int i = 0; i < num_names; i++) {
             if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
                 correct_predicted++;
             }
             total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
         }
+        precision = correct_predicted/total_predicted;
+        recall = correct_predicted/num_names;
+        guessesPerName = total_predicted/num_names;
+        
         System.out.println("\nRecords processed: " + num_names);
-        System.out.println("Precision: " + correct_predicted*100/total_predicted + "%");
-        System.out.println("Recall: " + correct_predicted*100/num_names + "%");
-        System.out.println("Average # predictions/name: " + total_predicted/num_names);
+        System.out.println("Precision: " + precision + "%");
+        System.out.println("Recall: " + recall + "%");
+        System.out.println("Average # predictions/name: " + guessesPerName);
         
 //------------------Benchmark program runtime-----------------------------------        
         double endTime = System.currentTimeMillis();
@@ -123,6 +110,61 @@ public class BackTransliteration {
         System.out.println("\nDuration: " + 
                             String.format("%.2f", time_taken_sec) + " secs (" +
                             String.format("%.2f", time_taken_min) + " mins)");
+    }
+
+    private static void printPredictedNames(List<String[]> nameList, Map<String, ArrayList<String>> scoreNamesMap) {
+        for (int i = 0; i < proc_limit; i++) {
+          //Print out current Persian name and its best suited Latin names
+            System.out.print(nameList.get(i)[p_idx]);
+            for (String bestName : scoreNamesMap.get(nameList.get(i)[p_idx])) {
+                System.out.print("\t" + bestName);
+            }
+            System.out.println();
+        }
+    }
+
+    private static List<String> importDictData() {
+        List<String> dictList = new ArrayList<>();
+        //import dictionary names
+        try {
+                //Open file as a stream
+            Stream<String> dictStream = Files.lines(Paths.get(dict_filepath));
+                //parse each line
+            dictList = dictStream.collect(Collectors.toList());
+            dictStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }        
+        return dictList;
+    }
+
+    private static List<String[]> importTrainData() {
+        List<String[]> nameList = new ArrayList<String[]>();
+        
+        try {
+            //Open file as a stream
+            Stream<String> trainStream = Files.lines(Paths.get(train_filepath));
+                //parse each line in the stream to store as Persian and Latin name
+            nameList = trainStream.map(line -> line.split(DELIMITER))
+                    .collect(Collectors.toList());
+            trainStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();;
+        }
+        return nameList;
+    }
+
+
+    private static void initialiseScoringMatrix() {
+        for (int row = 0; row < max_row; row++) {
+            for (int col = 0; col < max_col; col++) {
+                if (row == col) {
+                    matrix[row][col] = def_match_score;
+                } else {
+                    matrix[row][col] = def_replace_score;
+                }
+            }
+        }
     }
 
     /**
@@ -157,7 +199,8 @@ public class BackTransliteration {
         return distance[lhs.length()][rhs.length()];
     }
 
-    private static int calculateGED(String lhs, String rhs) {
+    
+    private static Integer calculateGED(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
         int i_cost = 1;
@@ -186,13 +229,9 @@ public class BackTransliteration {
      * @param c2: character 2 to be matched with
      * @return value of their match/replace score
      */
-    private static int matchReplaceCost(char c1, char c2) {
+    private static Integer matchReplaceCost(char c1, char c2) {
         int c1_value = Character.getNumericValue(c1) - 10;
         int c2_value = Character.getNumericValue(c2) - 10;
-        
-            //Default match and replacement scores
-        int def_match_score = 0;
-        int def_replace_score = 1;
         
             //Check if characters are outside A-Z; return 0 if so.
         if (c1_value < 0 || c1_value > 25) {
@@ -203,25 +242,11 @@ public class BackTransliteration {
             }
         } else if (c2_value < 0 || c2_value > 25) {
             return def_replace_score;
-        }
-        
-        
-        
-        //Initialise matrix
-        for (int row = 0; row < max_row; row++) {
-            for (int col = 0; col < max_col; col++) {
-                if (row == col) {
-                    matrix[row][col] = def_match_score;
-                } else {
-                    matrix[row][col] = def_replace_score;
-                }
-            }
-        }
-        
+        }        
         return matrix[c1_value][c2_value];
     }
 
-    private static int minimum(int a, int b, int c) {                            
+    private static Integer minimum(int a, int b, int c) {                            
         return Math.min(Math.min(a, b), c);                                      
     }
 }
