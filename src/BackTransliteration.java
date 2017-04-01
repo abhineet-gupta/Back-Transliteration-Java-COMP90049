@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class GED {   
+public class BackTransliteration {   
     public static void main(String[] args) {
         //Path to files
         String train_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\train.txt";
@@ -17,13 +17,14 @@ public class GED {
         
         int p_idx = 0;  //Persian name index
         int l_idx = 1;  //Latin name index
+        Integer num_names;  //number of names to process; can be used to limit processing during testing
         
-        List<String[]> nameList = new ArrayList<>();
-        List<String> dictList = new ArrayList<>();
-
+        List<String[]> nameList = new ArrayList<>();    //to store data from train.txt
+        List<String> dictList = new ArrayList<>();      //to store data from names.txt 
+//------------------------------------------------------------------------------
         //import training data
         try {
-                //Open file as a stream (Java 8 feature)
+                //Open file as a stream
             Stream<String> trainStream = Files.lines(Paths.get(train_filepath));
                 //parse each line in the stream to store as Persian and Latin name
             nameList = trainStream.map(line -> line.split(DELIMITER))
@@ -36,7 +37,7 @@ public class GED {
         
         //import dictionary names
         try {
-                //Open file as a stream (Java 8 feature)
+                //Open file as a stream
             Stream<String> dictStream = Files.lines(Paths.get(dict_filepath));
                 //parse each line
             dictList = dictStream.collect(Collectors.toList());
@@ -45,28 +46,27 @@ public class GED {
             e.printStackTrace();
         }
         System.out.println("Number of dict names read: " + dictList.size());
-        //-----------------------
+//------------------------------------------------------------------------------
             //for benchmarking time performance
         System.out.println("Processing...");
         long startTime = System.currentTimeMillis();
         
-        Integer num_names = nameList.size();
-        Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>();
+        num_names = nameList.size();    //how many records to analyse
+        Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>(); //to store the results/scores
         int temp_score, temp_min = 99;
         String temp_name;
         
-        for (int i = 0; i < num_names; i++) {   //for each persian name
+        for (int i = 0; i < num_names; i++) {   //for each Persian name
             temp_min = 99;
             temp_name = nameList.get(i)[p_idx].toLowerCase();
             
-            for (int j = 0; j < dictList.size(); j++) { 
-                //find its GED for each dictionary name
-                temp_score = CalculateGED(temp_name, dictList.get(j));
+            for (int j = 0; j < dictList.size(); j++) {    //find its GED for each dictionary name
+                temp_score = calculateLevenshteinDistance(temp_name, dictList.get(j));
                 
-                //if the new GED is less than previous minimum GED for this persian name...
+                //if the new GED is less than previous minimum GED for this Persian name...
                 if (temp_min > temp_score) {
                     temp_min = temp_score;
-                        //...create new list of potential Latin names for that persian name
+                        //...create new list of potential Latin names for that Persian name
                     scoreNamesMap.put(nameList.get(i)[p_idx], new ArrayList<>(Arrays.asList(dictList.get(j))));
                     
                 } else if (temp_score == temp_min){
@@ -81,7 +81,8 @@ public class GED {
 //            }
 //            System.out.println();
         }
-        
+//------------------------------------------------------------------------------
+        //Analysis
         int correct_predicted = 0;
         int total_predicted = 0;
         
@@ -94,14 +95,14 @@ public class GED {
         System.out.println("\nPrecision: " + correct_predicted*100/total_predicted + "%");
         System.out.println("Recall: " + correct_predicted*100/nameList.size() + "%");
         System.out.println("Average number of predictions per name: " + total_predicted/nameList.size());
-        
+//------------------------------------------------------------------------------        
         
         //end benchmark timing
         long endTime = System.currentTimeMillis();
         System.out.println("\nCalculations took " + (endTime - startTime)/1000.0/60.0 + " min.");
     }
 
-    private static int CalculateGED(String lhs, String rhs) {
+    private static int calculateLevenshteinDistance(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
     //Score matrix for Levenshtein Distance
