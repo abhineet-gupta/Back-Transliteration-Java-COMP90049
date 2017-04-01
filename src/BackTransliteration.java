@@ -14,7 +14,7 @@ import org.apache.commons.codec.language.Soundex;
 
 public class BackTransliteration {   
         //Process entire file or limited records
-    private static final Boolean process_entire_file = false; //set to false to process limited records
+    private static final Boolean process_entire_file = true; //set to false to process limited records
     private static final Integer proc_limit = 1000;  //number of names to process; only valid if above is false
     
     private static final Integer max_row = 26, max_col = 26;    //number of letters in alphabet
@@ -65,7 +65,7 @@ public class BackTransliteration {
         
         Integer temp_score, temp_min; 
         Integer temp_sx_score = 0, temp_sx_max = 0;
-        String temp_name = "";
+        String temp_name = "", temp_name_lower = "", temp_guess = "";
         Soundex sx = new Soundex();
         
         //Initialise scoring matrix - used only for GED
@@ -73,9 +73,10 @@ public class BackTransliteration {
         
         for (int i = 0; i < num_names; i++) {   //for each Persian name
             temp_min = temp_score_value;
-            temp_sx_max = 0;
+            temp_sx_max = -1;
             
-            temp_name = nameList.get(i)[p_idx].toLowerCase();
+            temp_name = nameList.get(i)[p_idx];
+            temp_name_lower = nameList.get(i)[p_idx].toLowerCase();
             
             for (int j = 0; j < dictList.size(); j++) {    //find its GED for each dictionary name
                 
@@ -96,7 +97,7 @@ public class BackTransliteration {
 //                
                 //------------SOUNDEX--------------
                 try {
-                    temp_sx_score = sx.difference(temp_name, dictList.get(j));
+                    temp_sx_score = sx.difference(temp_name_lower, dictList.get(j));
                 } catch (EncoderException e) {
                     e.printStackTrace();
                 } 
@@ -104,11 +105,31 @@ public class BackTransliteration {
                 if (temp_sx_max < temp_sx_score) {
                     temp_sx_max = temp_sx_score;
                         //...create new list of potential Latin names for that Persian name
-                    sxScoreNamesMap.put(nameList.get(i)[p_idx], new ArrayList<>(Arrays.asList(dictList.get(j))));
+                    sxScoreNamesMap.put(temp_name, new ArrayList<>(Arrays.asList(dictList.get(j))));
                     
                 } else if (temp_sx_score == temp_sx_max){
                         //Otherwise, if the score is the same, add current Latin name as a potential name
-                    sxScoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
+                    sxScoreNamesMap.get(temp_name).add(dictList.get(j));
+                }
+            }
+            
+            //------Implement GED on filtered results
+            
+            for (int k = 0; k < sxScoreNamesMap.get(temp_name).size(); k++) {
+                temp_guess = sxScoreNamesMap.get(temp_name).get(k);
+                
+//                temp_score = calculateLevenshteinDistance(temp_name, sxScoreNamesMap.get(nameList.get(i)[p_idx]).get(k));
+              temp_score = calculateGED(temp_name_lower, temp_guess);
+              
+              //if the new GED is less than previous minimum GED for this Persian name...
+                if (temp_min > temp_score) {
+                    temp_min = temp_score;
+                          //...create new list of potential Latin names for that Persian name
+                    scoreNamesMap.put(temp_name, new ArrayList<>(Arrays.asList(temp_guess)));
+                      
+                } else if (temp_score == temp_min){
+                    //Otherwise, if the score is the same, add current Latin name as a potential name
+                    scoreNamesMap.get(temp_name).add(temp_guess);
                 }
             }
         }
@@ -116,19 +137,20 @@ public class BackTransliteration {
 //        printPredictedNames(nameList, scoreNamesMap);
         
 //------------------Analyse----------------------------------------------------
-//        Integer correct_predicted = 0, total_predicted = 0;
-//        
-//        for (int i = 0; i < num_names; i++) {
-//            if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
-//                correct_predicted++;
-//            }
-//            total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
-//        }
-//        
-//        System.out.println("\nRecords processed: " + num_names);
-//        System.out.println("Precision: " + correct_predicted*100/total_predicted + "%");
-//        System.out.println("Recall: " + correct_predicted*100/num_names + "%");
-//        System.out.println("Average # predictions/name: " + total_predicted/num_names);
+        Integer correct_predicted = 0, total_predicted = 0;
+        
+        for (int i = 0; i < num_names; i++) {
+            if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
+                correct_predicted++;
+            }
+            total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
+        }
+        
+        System.out.println("\nRecords processed: " + num_names);
+        System.out.println("Precision: " + correct_predicted*100/total_predicted + "%");
+        System.out.println("Recall: " + correct_predicted*100/num_names + "%");
+        System.out.println("Average # predictions/name: " + total_predicted/num_names);
+        System.out.println();
         
         //-------------SOUNDEX---------------
         Integer sx_correct_predicted = 0, sx_total_predicted = 0;
