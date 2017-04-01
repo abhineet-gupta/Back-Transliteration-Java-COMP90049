@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 public class BackTransliteration {   
         //Process entire file or limited records
     private static final Boolean process_entire_file = false; //set to false to process limited records
-    private static final Integer proc_limit = 10;  //number of names to process; only valid if above is false
+    private static final Integer proc_limit = 100;  //number of names to process; only valid if above is false
     
     private static final Integer max_row = 26, max_col = 26;    //number of letters in alphabet
     private static Integer[][] matrix = new Integer[max_row][max_col];  //BLOSUM-style matrix to hold scoring matrix
@@ -66,8 +66,8 @@ public class BackTransliteration {
             temp_name = nameList.get(i)[p_idx].toLowerCase();
             
             for (int j = 0; j < dictList.size(); j++) {    //find its GED for each dictionary name
-                temp_score = calculateLevenshteinDistance(temp_name, dictList.get(j));
-//                temp_score = calculateGED(temp_name, dictList.get(j));
+//                temp_score = calculateLevenshteinDistance(temp_name, dictList.get(j));
+                temp_score = calculateGED(temp_name, dictList.get(j));
                 
                 //if the new GED is less than previous minimum GED for this Persian name...
                 if (temp_min > temp_score) {
@@ -80,12 +80,11 @@ public class BackTransliteration {
                     scoreNamesMap.get(nameList.get(i)[p_idx]).add(dictList.get(j));
                 }
             }
-            
-//            printPredictedNames(nameList, scoreNamesMap);
         }
+//        printPredictedNames(nameList, scoreNamesMap);
         
 //------------------Analyse----------------------------------------------------
-        Integer precision = 0, recall = 0, guessesPerName = 0, correct_predicted = 0, total_predicted = 0;
+        Integer correct_predicted = 0, total_predicted = 0;
         
         for (int i = 0; i < num_names; i++) {
             if (scoreNamesMap.get(nameList.get(i)[p_idx]).contains(nameList.get(i)[l_idx])){
@@ -93,14 +92,11 @@ public class BackTransliteration {
             }
             total_predicted += scoreNamesMap.get(nameList.get(i)[p_idx]).size();
         }
-        precision = correct_predicted/total_predicted;
-        recall = correct_predicted/num_names;
-        guessesPerName = total_predicted/num_names;
         
         System.out.println("\nRecords processed: " + num_names);
-        System.out.println("Precision: " + precision + "%");
-        System.out.println("Recall: " + recall + "%");
-        System.out.println("Average # predictions/name: " + guessesPerName);
+        System.out.println("Precision: " + correct_predicted*100/total_predicted + "%");
+        System.out.println("Recall: " + correct_predicted*100/num_names + "%");
+        System.out.println("Average # predictions/name: " + total_predicted/num_names);
         
 //------------------Benchmark program runtime-----------------------------------        
         double endTime = System.currentTimeMillis();
