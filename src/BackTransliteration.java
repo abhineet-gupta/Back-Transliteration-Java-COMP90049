@@ -12,28 +12,31 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.language.Soundex;
 
 public class BackTransliteration {   
-        //Process entire file or limited records
-    private static final Boolean process_entire_file = false; //set to false to process limited records
-    private static final Integer proc_limit = 1000;  //number of names to process; only valid if above is false
+//-----Configurable parameters-------
+    //Process entire file or limited records
+    private static final Boolean process_entire_file = true; //set to false to process limited records
+    private static Integer proc_limit = 1000;  //number of names to process; only valid if above is false
+    
+    //Default match and replacement scores - placed here as it makes for easier manipulation than if inside method
+    private static final Integer ged_m_cost = -1;
+    private static final Integer ged_i_cost = 2;
+    private static final Integer ged_d_cost = 1;
+    private static final Integer ged_r_cost = 1;
+    private static final Integer ged_modr_cost = 0;
+    private static final Integer ged_modi_cost = 1;
+
+    //Path to files
+    private static final String train_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\train.txt";
+    private static final String dict_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\names.txt";
+    private static final String DELIMITER = "\t";
+
+//----------------------------------
     private static Integer scan_gap = 1;
     
     private static final Integer max_row = 26, max_col = 26;    //number of letters in alphabet
     private static Integer[][] ged_replace_score_matrix = new Integer[max_row][max_col];  //BLOSUM-style matrix to hold scoring matrix
     private static Integer[] ged_insert_score_matrix = new Integer[max_row];
-    
-        //Path to files
-    private static final String train_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\train.txt";
-    private static final String dict_filepath = "D:\\GDrive\\Docs\\2017\\Code\\Java\\KT_Proj1_BackTransliteration\\data\\names.txt";
-    private static final String DELIMITER = "\t";
-    
-    //Default match and replacement scores
-    private static final Integer ged_m_cost = 0;
-    private static final Integer ged_i_cost = 1;
-    private static final Integer ged_d_cost = 1;
-    private static final Integer ged_r_cost = 1;
-    private static final Integer ged_modr_cost = 0;
-    private static final Integer ged_modi_cost = 0;
-    
+            
     private static final Integer p_idx = 0;  //Persian name index
     private static final Integer l_idx = 1;  //Latin name index
     private static Integer max_ged_score = 99;  //initialisation of GED score
@@ -57,7 +60,9 @@ public class BackTransliteration {
         
         Integer num_names = nameList.size(); 
         if (!process_entire_file) {
-            scan_gap = nameList.size()/proc_limit;  //skip lines to limit processing 
+            scan_gap = nameList.size()/proc_limit;  //skip lines to spread out processing over entire file 
+        } else {
+            proc_limit = num_names;
         }
 
         Map<String, ArrayList<String>> scoreNamesMap = new HashMap<>(); //to store min Edit Distance results/scores
@@ -87,7 +92,8 @@ public class BackTransliteration {
                 temp_score = calculateGED(temp_name, temp_dict_name);
                 
                 //if the new GED is less than previous minimum GED for this Persian name...
-                if (temp_score < temp_min) {
+                if ((temp_score < temp_min) &&
+                (temp_name.length() <= temp_dict_name.length())){
                     temp_min = temp_score;
                         //...create new list of potential Latin names for that Persian name
                     scoreNamesMap.put(temp_name, new ArrayList<>(Arrays.asList(temp_dict_name)));
@@ -103,7 +109,8 @@ public class BackTransliteration {
                 try {
                     temp_sx_score = sx.difference(temp_name_lower, temp_dict_name);
                     
-                    if (temp_sx_max < temp_sx_score) {//if the new Soundex is more than previous max Soundex value for this Persian name...
+                    if ((temp_sx_max < temp_sx_score) &&
+                            (temp_name.length() <= temp_dict_name.length())){//if the new Soundex is more than previous max Soundex value for this Persian name...
                         temp_sx_max = temp_sx_score;
                             //...create new list of potential Latin names for that Persian name
                         sxScoreNamesMap.put(temp_name, new ArrayList<>(Arrays.asList(temp_dict_name)));
@@ -220,6 +227,11 @@ public class BackTransliteration {
         ged_insert_score_matrix[Character.getNumericValue('i')-10] = ged_modi_cost;
         ged_insert_score_matrix[Character.getNumericValue('o')-10] = ged_modi_cost;
         ged_insert_score_matrix[Character.getNumericValue('u')-10] = ged_modi_cost;
+        
+        ged_insert_score_matrix[Character.getNumericValue('h')-10] = ged_modi_cost;
+        ged_insert_score_matrix[Character.getNumericValue('c')-10] = ged_modi_cost;
+        ged_insert_score_matrix[Character.getNumericValue('d')-10] = ged_modi_cost;
+        ged_insert_score_matrix[Character.getNumericValue('t')-10] = ged_modi_cost;
     }
 
     private static void printPredictedNames(List<String[]> nameList, Map<String, ArrayList<String>> scoreNamesMap) {
@@ -281,17 +293,25 @@ public class BackTransliteration {
         changeScore('a', 'i');
         changeScore('a', 'o');
         changeScore('a', 'u');
+        
         changeScore('c', 'k');
+        changeScore('c', 's');
+        
+        changeScore('f', 'p');
+        
         changeScore('g', 'j');
-        changeScore('p', 'f');
-        changeScore('s', 'c');
-        changeScore('v', 'w');
+        
+        changeScore('h', 'j');
+        
+        changeScore('k', 'x');
+        
         changeScore('v', 'u');
         changeScore('v', 'o');
         changeScore('v', 'w');
-        changeScore('o', 'v');
+        
         changeScore('y', 'i');
         changeScore('y', 'e');
+        
         changeScore('z', 's');
     }
     
@@ -334,7 +354,6 @@ public class BackTransliteration {
         return distance[lhs.length()][rhs.length()];
     }
 
-    
     private static Integer calculateGED(String lhs, String rhs) {
         int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];        
         
