@@ -1,0 +1,22 @@
+AACTAY	aechtie
+	[eastway]
+ASTRYDM	strydom
+	[strydom]
+BRSLAV	breslau
+	[berislav, breslau]
+DYMA	dema
+	[dema, dima]
+HAGA	haga
+	[haga]
+KANLN	conlon
+	[conlon, kansan, kaplan]
+LARNS	lawrance
+	[laurens, lornas]
+MVTVRZ	motors
+	[motors]
+RAYBLT	rybolt
+	[raybould, rybolt]
+SYVN	sune
+	[seven, sivan]
+ZYR	zeyer
+	[zeyer]

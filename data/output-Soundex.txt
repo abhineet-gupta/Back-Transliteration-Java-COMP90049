@@ -1,0 +1,22 @@
+AACTAY	aechtie
+	[acadia, aechtie, agatha, aguado, akihito, asquith, awasthi]
+ASTRYDM	strydom
+	[agutter, astaire, astarte, astartes, astoria, astrakhan, asturias, austerlitz, austerlitzs, austern, australasia, australasias, australia, australian, australians, australias, australoid, australopithecus, australopithecuss, austranten, austria, austrian, austrians, austrias, austronesian, austronesians]
+BRSLAV	breslau
+	[barcelona, barcelonas, barclay, barclays, barculo, bargiel, barkell, barkley, barkleys, barzilai, bergel, berglund, berislav, berkeley, berkeleys, berkley, berkling, berzelius, birgel, boerkoel, borgailo, borglum, brasilia, brasilias, brazelton, brazil, brazilian, brazilians, brazils, breslau, bresler, brockley, brooklyn, brooklyns, brookwell, brueghel, brussels, brusselss, bursell]
+DYMA	dema
+	[dahomey, dame, dana, dane, dani, danih, dannie, danny, daum, dauwen, dawn, dean, deana, deann, deanna, deanne, deen, deena, dema, dena, dennee, denny, deno, deon, dewan, dewayne, diana, diane, diann, dianna, dianne, diem, dien, dima, dina, dinah, dini, dinn, dinno, dino, dion, dione, dionne, diwana, doan, doane, dohn, dome, domm, dona, donahue, donn, donna, donne, donnie, donny, down, downey, downy, duan, duane, duhon, dunae, dunn, dunne, dwain, dwaine, dwayne, dyna]
+HAGA	haga
+	[haas, haass, hack, hackshaw, haga, haggai, hague, haich, haik, hakka, hass, hasse, hausa, hawaiis, hawk, hawks, hayes, hayess, hays, hecke, heggie, hegyi, heikki, heiko, heiss, heke, hess, hesse, hickey, hickie, hicks, hickss, hise, hiss, hisss, hockey, hoge, hogg, hook, hooke, hoos, hosea, hoss, houck, hough, house, howes, howk, huck, hucks, hueys, hugh, hughs, hugo, husk]
+KANLN	conlon
+	[kamelen]
+LARNS	lawrance
+	[laramies, laurence, laurences, laurens, lawrance, lawrence, loraines, lorenas, lorenes, lorenz, lorenzen, lorenzi, lorenzo, lorenzos, lornas, lorraines]
+MVTVRZ	motors
+	[abudhabi, lebedev, luftwaffe, mactavish, maldive, maldives, maldivess, maldivian, maldivians, mandaville, mandible, manitoba, manitobas, maputo, maputos, mobutu, mobutus, moffat, moldavia, moldavias, moldova, moldovas, molotov, molotovs, mondfrans, monteverdi, montevideo, montevideos, montpelier, montpeliers, mountbatten, muppet, muppets, spatafora]
+RAYBLT	rybolt
+	[rabold, raybould, revelations, rybolt]
+SYVN	sune
+	[sabin, sabina, sabine, sabini, savannah, savin, scheepen, seven, shavian, sivan, skaven, sobhan, sopan, spahn, spain, spam, spine, subhani, sven]
+ZYR	zeyer
+	[zahara, zahir, zahirah, zahra, zaira, zaire, zara, zaria, zeyer, zorro]

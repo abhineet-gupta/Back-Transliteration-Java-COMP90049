@@ -353,7 +353,7 @@ public class BackTransliteration {
         int i_cost = 1;
         int d_cost = 1;
         int r_cost = 1;
-        
+         
         //Initialise first row and column of table 
         for (int i = 0; i <= lhs.length(); i++)                                 
             distance[i][0] = i * i_cost;                                                  
