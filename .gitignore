@@ -1,1 +1,3 @@
-/bin/
+bin/
+data/output*.txt
+data/output*.csv
