@@ -1,6 +1,10 @@
-# COMP90049 Project 1
+# Back-transliteration of Persian to Latin names
 
-## Back-transliteration of Persian to Latin names
+## COMP90049 Knowledge Technologies
+
+University of Melbourne
+
+Project 1 - Sem 1, 2017
 
 Project specification can be read [here](2017S1-90049P1-spec.pdf).
 
