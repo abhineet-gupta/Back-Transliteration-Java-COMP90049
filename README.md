@@ -2,6 +2,8 @@
 
 ## Back-transliteration of Persian to Latin names
 
+Project specification can be read [here](2017S1-90049P1-spec.pdf).
+
 Sem 1, 2017
 
 ## Editing
@@ -27,8 +29,9 @@ PS: This is the only time a valid output file will be generated [otherwise, the 
 
 ## Compilation
 
-Compile BackTransliteration.java
-Include 'commons-codec-1.10.jar' library in /lib
+Compile `BackTransliteration.java`. 
+
+Include 'commons-codec-1.10.jar' library from `/lib`
 
 ## Running
 
